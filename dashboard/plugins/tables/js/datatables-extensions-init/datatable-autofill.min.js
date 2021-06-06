@@ -1,0 +1,2 @@
+
+$(document).ready(function(){$(".auto-fill").DataTable({autoFill:!0}),$(".keytable-integration").DataTable({keys:!0,autoFill:!0}),$(".confirm-action").DataTable({autoFill:{alwaysAsk:!0}}),$(".column-selector").DataTable({columnDefs:[{orderable:!1,className:"select-checkbox",targets:0}],select:{style:"os",selector:"td:first-child"},order:[[1,"asc"]],autoFill:{columns:":not(:first-child)"}});$(".scrolling-dataTable").dataTable({scrollY:400,scrollX:!0,scrollCollapse:!0,paging:!1,autoFill:!0})});
