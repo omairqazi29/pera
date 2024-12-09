@@ -17,10 +17,10 @@ Welcome to the **P.E.R.A. Water Data Collection System**! This innovative projec
 
 | File/Resource                      | Description                                                                                       |
 |------------------------------------|---------------------------------------------------------------------------------------------------|
-| **Pitch Document**                 | Comprehensive overview of the system’s objectives, features, and impact. [Pitch Document](https://github.com/omairqazi29/pera/blob/main/P.E.R.A%20WATER%20DATA%20COLLECTION%20SYSTEM.pdf) 📄                        |
-| **Prototype Video**                | Watch the system in action! [Prototype Demo](https://1drv.ms/v/s!AsvVMX2LdYhb5TuH7gExwOoEX1vN?e=kl0cUP) 🎥 |
-| **Server Code (Dashboard)**        | Backend code for managing and processing collected data efficiently. 🖥️                             |
-| **Arduino Code (Uploader.ino)**    | Firmware for hardware components to upload and synchronize data seamlessly. 🤖                    |
+| **Pitch Document**     | Comprehensive overview of the system’s objectives, features, and impact. [Pitch Document](https://github.com/omairqazi29/pera/blob/main/P.E.R.A%20WATER%20DATA%20COLLECTION%20SYSTEM.pdf) 📄                        |
+| **Prototype Video**    | Watch the system in action! [Prototype Demo](https://1drv.ms/v/s!AsvVMX2LdYhb5TuH7gExwOoEX1vN?e=kl0cUP) 🎥 |
+| **Server Code**        | Backend code for managing and processing collected data efficiently. [dashboard](https://github.com/omairqazi29/pera/tree/main/dashboard) 🖥️                             |
+| **Arduino Code**       | Firmware for hardware components to upload and synchronize data seamlessly. 🤖                    |
 
 ---
 
