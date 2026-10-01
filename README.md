@@ -1,75 +1,99 @@
-# 🌊 P.E.R.A. Water Data Collection System
+# P.E.R.A. Water Data Collection System
 
-Welcome to the **P.E.R.A. Water Data Collection System**! This innovative project is a cornerstone of the **Ponent Exploration & Research in Aerospace (P.E.R.A.)** initiative. Designed to elevate water rocket research, the system seamlessly integrates **hardware** and **software**, providing researchers with accurate, reliable, and user-friendly tools to unlock new frontiers in aerospace exploration.
+P.E.R.A. (Ponent Exploration & Research in Aerospace) is a LleidaDrone / Liquid Galaxy project for collecting water and atmosphere readings from a water-rocket payload. An Arduino drives an ESP8266, which uploads each reading with an HTTP GET into a PHP/MySQL dashboard used to review the logs.
 
----
+This repository holds the pitch, the dashboard, and the uploader sketch. It is a student-era prototype: the dashboard UI is an admin template, and the firmware ships in demo mode.
 
-## ✨ Highlights
+## Architecture
 
-- 🚀 **Advanced Data Collection**: Combines custom hardware with intelligent software to collect and process flight data with exceptional precision.  
-- 🎛 **Integrated Ecosystem**: Front-end and back-end systems work in harmony to deliver an intuitive user experience and efficient data handling.  
-- 📊 **Enhanced Usability**: Upgraded frameworks improve accuracy and accessibility, empowering researchers to focus on impactful discoveries.  
-- 🌌 **Aerospace Research Enabler**: Drives innovation by offering tools tailored for in-depth analysis of water rocket experiments.
+```
+sensors (or demo stubs)
+        |
+        v
+Arduino sketch (LG_Water_Data_Uploader.ino)
+        |  AT commands over SoftwareSerial
+        v
+ESP8266 ---- HTTP GET ----> upload-waterdata.php
+                                    |
+                                    v
+                              MySQL `water-records`
+                                    |
+                                    v
+                         PHP dashboard (login + tables)
+```
 
----
+1. The sketch builds one reading (`buildTelemetryRequest()`). With `DEMO_MODE` left at its default (`true`), values are simulated. Set it to `false` and fill in the sensor stubs for hardware.
+2. The ESP8266 joins Wi-Fi and sends `GET /upload-waterdata.php` with the parameter names the PHP endpoint expects: `sea`, `lon`, `lat`, `stemp`, `atemp`, `hum`, `slp`, `ph`, `tds`, `rkt`.
+3. `dashboard/upload-waterdata.php` validates those parameters and inserts a row with a prepared statement.
+4. Signed-in users review rows on `table-waterrecords.php`. Login and registration use prepared statements and `password_hash`.
 
-## 📂 Project Components
+The upload URL is not behind the dashboard login. Treat it as a device endpoint and do not expose it on an open network without additional controls.
 
-| File/Resource                      | Description                                                                                       |
-|------------------------------------|---------------------------------------------------------------------------------------------------|
-| **Pitch Document**     | Comprehensive overview of the system’s objectives, features, and impact. [Pitch Document](https://github.com/omairqazi29/pera/blob/main/P.E.R.A%20WATER%20DATA%20COLLECTION%20SYSTEM.pdf) 📄                        |
-| **Prototype Video**    | Watch the system in action! [Prototype Demo](https://1drv.ms/v/s!AsvVMX2LdYhb5TuH7gExwOoEX1vN?e=kl0cUP) 🎥 |
-| **Server Code**        | Backend code for managing and processing collected data efficiently. [dashboard](https://github.com/omairqazi29/pera/tree/main/dashboard) 🖥️                             |
-| **Arduino Code**       | Firmware for hardware components to upload and synchronize data seamlessly. [.ino](https://github.com/omairqazi29/pera/blob/main/LG_Water_Data_Uploader.ino) 🤖                    |
+## Repository layout
 
----
+| Path | Role |
+| --- | --- |
+| [Pitch PDF](https://github.com/omairqazi29/pera/blob/main/P.E.R.A%20WATER%20DATA%20COLLECTION%20SYSTEM.pdf) | Project objectives and system description |
+| [Prototype video](https://1drv.ms/v/s!AsvVMX2LdYhb5TuH7gExwOoEX1vN?e=kl0cUP) | Hardware and dashboard demo |
+| `dashboard/` | PHP/MySQL UI: login, registration, water-data table |
+| `dashboard/schema.sql` | Inferred MySQL schema (none was committed originally) |
+| `LG_Water_Data_Uploader.ino` | Arduino + ESP8266 uploader |
+| `.env.example` | Dummy database settings. Copy to `.env` locally |
 
-## 🎨 Features
+`dashboard/icons/` and `dashboard/plugins/` are leftovers from the admin template (icon fonts, chart libraries, editors). They are still referenced by the pages, so they stay in the tree. See [CLEANUP.md](CLEANUP.md).
 
-### 1. **Custom Hardware**
-Precision-engineered components collect vital flight data from water rockets, ensuring every detail is captured.
+## Setup
 
-### 2. **Interactive Front-End**
-A sleek, user-friendly interface enables researchers to view and analyze data effortlessly.
+Requirements: PHP 7.4+ (8.x works) with `mysqli`, MySQL 5.7+ or MariaDB, and a web server whose document root is `dashboard/` (or adjust `UPLOAD_PATH` in the sketch). Arduino IDE with `SoftwareSerial` (built in) for the firmware.
 
-### 3. **Robust Back-End**
-Powerful processing tools ensure data accuracy, reliability, and scalability for comprehensive analysis.
+### Dashboard
 
-### 4. **Framework Enhancements**
-Refinements to existing systems deliver improved usability and advanced features tailored for aerospace research.
+1. Create a database and load the inferred schema:
 
----
+   ```bash
+   mysql -u root -p < dashboard/schema.sql
+   ```
 
-## 🚀 The Impact
+   Column types and the timestamp column name `recorded_at` are inferred. Details and the `users` / `water-records` columns are in [CONTRIBUTING.md](CONTRIBUTING.md) and `dashboard/schema.sql`. If a live database already exists, compare names before importing.
 
-This system revolutionizes water rocket experiments by:
+2. Configure credentials outside git:
 
-- Providing **accurate and actionable data** for advanced analysis.  
-- Enabling researchers to explore new possibilities in aerospace science.  
-- Streamlining the data collection process, saving time and effort.
+   ```bash
+   cp .env.example .env
+   ```
 
----
+   Set `DB_SERVER`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_NAME`. Process environment variables override `.env`. If nothing is set, the app falls back to `localhost` / `root` / an empty password / `lg-dashboard` for a local demo only.
 
-## 🌐 About P.E.R.A.
+3. Point the vhost at `dashboard/` and open `login.php`. Register the first account at `register.php` (open registration is unchanged from the original app).
 
-The **Ponent Exploration & Research in Aerospace (P.E.R.A.)** initiative, by the **LleidaDrone Association**, focuses on advancing beyond the altitude capabilities of traditional drones. By engaging engineering students and experts, P.E.R.A. drives innovation in exploring atmospheric and space environments.  
-[Learn More About P.E.R.A.](https://www.liquidgalaxy.eu/2019/09/pera-ponent-exploration-and-research-in.html?utm_source=chatgpt)
+4. Confirm an insert. From the dashboard host:
 
----
+   ```bash
+   curl -sS "http://localhost/upload-waterdata.php?sea=Bay%20of%20Bengal&lon=88E&lat=21N&stemp=293K&atemp=301K&hum=82%25&slp=101325Pa&ph=7.8&tds=740mgl&rkt=LG%20Rocket%202FA"
+   ```
 
-## 📜 How to Get Started
+   A valid row returns `Success!`. Empty or malformed parameters return HTTP 400.
 
-1. **Read the Pitch Document**: Familiarize yourself with the project’s goals and architecture.  
-2. **Watch the Prototype Video**: Visualize the system in action.  
-3. **Dive Into the Code**: Explore the dashboard and Arduino firmware to understand the system’s functionality.  
-4. **Contribute**: Have ideas to enhance the system? Join the effort to push aerospace research further!
+### Firmware
 
----
+1. Open `LG_Water_Data_Uploader.ino` in the Arduino IDE.
+2. Edit the block marked network configuration: `HOST`, `WIFI_SSID`, `WIFI_PASS`, and `UPLOAD_PATH` if the dashboard is not at the web root.
+3. Leave `DEMO_MODE` as `true` until real sensors are connected. The stubs in `readLongitude()`, `readLatitude()`, and the other `read*()` functions are the plug-in points.
+4. Wire ESP8266 RX/TX to pins 2 and 3 (SoftwareSerial) and match `ESP_BAUD` to the AT firmware baud rate.
+5. Flash the board. The serial monitor at 9600 baud prints each AT command (`AT`, `AT+CWMODE=1`, `AT+CWJAP`, `AT+CIPMUX=0`, then `CIPSTART` / `CIPSEND` / `CIPCLOSE` per reading).
 
-## 🤝 Acknowledgments
+## Security
 
-This project wouldn’t be possible without the dedication of the P.E.R.A. team and the collaborative spirit of aerospace enthusiasts worldwide. Together, we’re shaping the future of exploration and discovery. 🌟
+Database credentials used to be hardcoded in `dashboard/config.php` and are in the git history of this repository. **Rotate that password on any live MySQL host that used it**, then set the new password only in the environment or a local `.env` file. Do not commit the new value.
 
----
+`.env` and `.DS_Store` are gitignored.
 
-Feel free to clone, fork, or contribute to this project. Let’s innovate together! 🚀
+## About P.E.R.A.
+
+The Ponent Exploration & Research in Aerospace initiative, by the LleidaDrone Association, looks past the altitude range of typical drones and involves engineering students in atmospheric and space work.
+
+[P.E.R.A. on Liquid Galaxy](https://www.liquidgalaxy.eu/2019/09/pera-ponent-exploration-and-research-in.html)
+
+## Contributing
+
+Setup details, PHP/MySQL notes, and firmware configuration are in [CONTRIBUTING.md](CONTRIBUTING.md).
