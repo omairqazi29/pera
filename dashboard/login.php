@@ -18,16 +18,23 @@ $username_err = $password_err = "";
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
 
-    // Check if username is empty
+    // Check if username is empty. Prepared statements below already bind this
+    // value; reject control characters and oversized input before the query.
     if(empty(trim($_POST["username"]))){
         $username_err = "Please enter username.";
     } else{
         $username = trim($_POST["username"]);
+        if(strlen($username) > 64 || preg_match('/[\x00-\x1F\x7F]/', $username)){
+            $username_err = "Please enter username.";
+            $username = "";
+        }
     }
 
     // Check if password is empty
     if(empty(trim($_POST["password"]))){
         $password_err = "Please enter your password.";
+    } elseif(strlen($_POST["password"]) > 256){
+        $password_err = "The password you entered was not valid.";
     } else{
         $password = trim($_POST["password"]);
     }
@@ -55,17 +62,16 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     mysqli_stmt_bind_result($stmt, $id, $name, $username, $hashed_password);
                     if(mysqli_stmt_fetch($stmt)){
                         if(password_verify($password, $hashed_password)){
-                            // Password is correct, so start a new session
-                            session_start();
+                            // Password is correct. Rotate the session id, then store the user.
+                            session_regenerate_id(true);
 
-                            // Store data in session variables
                             $_SESSION["loggedin"] = true;
                             $_SESSION["id"] = $id;
                             $_SESSION["name"] = $name;
                             $_SESSION["username"] = $username;
 
-                            // Redirect user to welcome page
                             header("location: index.php");
+                            exit;
                         } else{
                             // Display an error message if password is not valid
                             $password_err = "The password you entered was not valid.";
@@ -81,7 +87,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         }
 
         // Close statement
-        mysqli_stmt_close($stmt);
+        if($stmt){
+            mysqli_stmt_close($stmt);
+        }
     }
 
     // Close connection
@@ -135,13 +143,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                                 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                                     <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
                                         <label>Username</label>
-                                        <input type="text" name="username" class="form-control" value="<?php echo $username; ?>">
-                                        <span class="help-block"><?php echo $username_err; ?></span>
+                                        <input type="text" name="username" class="form-control" value="<?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <span class="help-block"><?php echo htmlspecialchars($username_err, ENT_QUOTES, 'UTF-8'); ?></span>
                                     </div>
                                     <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
                                         <label>Password</label>
                                         <input type="password" name="password" class="form-control">
-                                        <span class="help-block"><?php echo $password_err; ?></span>
+                                        <span class="help-block"><?php echo htmlspecialchars($password_err, ENT_QUOTES, 'UTF-8'); ?></span>
                                     </div>
                                     <div class="form-group">
                                         <input type="submit" class="btn btn-primary" value="Login">

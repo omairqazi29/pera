@@ -211,32 +211,23 @@ require_once "config.php";
                                         </thead>
                                         <tbody>
                                           <?php
+                                            // Static query (no request input). Cell text is escaped
+                                            // because rows can originate from the public uploader.
                                             $sql = "SELECT * FROM `water-records` ORDER BY id DESC";
-                                            if ($result=mysqli_query($link,$sql))
+                                            if ($result = mysqli_query($link, $sql))
                                             {
-                                        	  while ($row=mysqli_fetch_row($result))
+                                        	  while ($row = mysqli_fetch_row($result))
                                               {
-
-                                                echo "<TR>";
-                                                echo "<TD>".$row[0]."</TD>";
-                                                echo "<TD>".$row[1]."</TD>";
-                                                echo "<TD>".$row[2]."</TD>";
-                                                echo "<TD>".$row[3]."</TD>";
-                                                echo "<TD>".$row[4]."</TD>";
-                                                echo "<TD>".$row[5]."</TD>";
-                                                echo "<TD>".$row[6]."</TD>";
-                                                echo "<TD>".$row[7]."</TD>";
-                                                echo "<TD>".$row[8]."</TD>";
-                                                echo "<TD>".$row[9]."</TD>";
-                                                echo "<TD>".$row[10]."</TD>";
-                                                echo "<TD>".$row[11]."</TD>";
-                                                echo "</TR>";
+                                                echo "<tr>";
+                                                foreach ($row as $cell) {
+                                                    echo "<td>" . htmlspecialchars((string) $cell, ENT_QUOTES, 'UTF-8') . "</td>";
+                                                }
+                                                echo "</tr>";
                                               }
-                                              // Free result set
                                               mysqli_free_result($result);
                                             }
 
-                                            mysqli_close($conn);
+                                            mysqli_close($link);
                                         ?>
                                         </tbody>
                                         <tfoot>
